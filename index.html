@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laravel Mail Send — Terminal Guide</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef3ef;
+    --panel:#ffffff;
+    --panel-2:#f3f7f4;
+    --border:#d5e0d9;
+    --green:#1c9a53;
+    --green-dim:#bfe6cf;
+    --text:#1e2b23;
+    --muted:#5e6f65;
+    --amber:#b9740c;
+    --red:#d6544c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size:15px;
+    line-height:1.7;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(0deg, rgba(57,255,138,0.02) 0px, rgba(57,255,138,0.02) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+    z-index:9999;
+  }
+  a{color:var(--green); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ---- Header ---- */
+  .topbar{
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    position:sticky; top:0; z-index:100;
+  }
+  .brand{
+    color:var(--green);
+    font-weight:800;
+    letter-spacing:0.5px;
+  }
+  .brand .cursor{
+    display:inline-block;
+    width:9px; height:18px;
+    background:var(--green);
+    margin-left:4px;
+    animation:blink 1s steps(1) infinite;
+    vertical-align:-3px;
+  }
+  @keyframes blink{50%{opacity:0;}}
+
+  .lang-toggle{
+    background:transparent;
+    border:1px solid var(--green-dim);
+    color:var(--green);
+    font-family:inherit;
+    font-size:13px;
+    padding:6px 14px;
+    border-radius:3px;
+    letter-spacing:1px;
+  }
+  .lang-toggle:hover{background:rgba(28,154,83,0.08);}
+  .lang-toggle.active{background:var(--green); color:#fff; border-color:var(--green);}
+  .btn-group .lang-toggle:first-child{border-radius:3px 0 0 3px; border-right:none;}
+  .btn-group .lang-toggle:last-child{border-radius:0 3px 3px 0;}
+
+  /* ---- Terminal window chrome ---- */
+  .term{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+    box-shadow:0 0 40px rgba(57,255,138,0.03), 0 20px 40px rgba(0,0,0,0.4);
+  }
+  .term-bar{
+    background:var(--panel-2);
+    border-bottom:1px solid var(--border);
+    padding:9px 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .dot{width:11px; height:11px; border-radius:50%;}
+  .dot.red{background:var(--red);}
+  .dot.yellow{background:var(--amber);}
+  .dot.green{background:var(--green);}
+  .term-title{
+    color:var(--muted);
+    font-size:12px;
+    margin-left:8px;
+  }
+  .term-body{
+    padding:20px;
+  }
+  .term-body pre{
+    margin:0;
+    white-space:pre-wrap;
+    word-break:break-word;
+    color:var(--text);
+    font-size:13.5px;
+  }
+
+  /* ---- Hero typing ---- */
+  #typewriter{white-space:pre-wrap;}
+  .hero-cursor{
+    display:inline-block; width:8px; height:16px;
+    background:var(--green); animation:blink 0.9s steps(1) infinite;
+    vertical-align:-2px;
+  }
+
+  /* ---- Section labels ---- */
+  .path{
+    color:var(--muted);
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    margin-bottom:6px;
+  }
+  .path .green{color:var(--green);}
+  h2.sec-title{
+    color:var(--text);
+    font-weight:700;
+    font-size:1.5rem;
+    margin-bottom:1.2rem;
+  }
+  section{padding:56px 0; border-bottom:1px dashed var(--border);}
+
+  /* ---- code blocks ---- */
+  .codebox{
+    position:relative;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+  }
+  .codebox .term-bar{border-radius:6px 6px 0 0;}
+  .codebox pre{
+    margin:0; padding:18px;
+    overflow-x:auto;
+    font-size:13px;
+    color:#2b3d33;
+  }
+  .codebox pre code{color:inherit;}
+  .copy-btn{
+    position:absolute;
+    top:9px; right:12px;
+    background:transparent;
+    border:1px solid var(--green-dim);
+    color:var(--green);
+    font-family:inherit;
+    font-size:11.5px;
+    padding:3px 10px;
+    border-radius:3px;
+    z-index:5;
+  }
+  .copy-btn:hover{background:rgba(57,255,138,0.1);}
+  .copy-btn.copied{color:#0d3d20; border-color:var(--green); background:var(--green-dim);}
+
+  /* keyword-ish coloring, purely visual */
+  .tok-kw{color:#ff9d7a;}
+  .tok-str{color:#ffd479;}
+  .tok-var{color:#7ac3ff;}
+  .tok-cmt{color:var(--muted); font-style:italic;}
+
+  /* ---- steps list ---- */
+  .step{
+    display:flex; gap:16px;
+    padding:16px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .step:last-child{border-bottom:none;}
+  .step-num{
+    flex:0 0 auto;
+    width:38px; height:38px;
+    border:1px solid var(--green-dim);
+    color:var(--green);
+    display:flex; align-items:center; justify-content:center;
+    border-radius:4px;
+    font-weight:700;
+  }
+  .step-body h6{color:var(--text); font-weight:700; margin-bottom:4px;}
+  .step-body p{color:var(--muted); margin-bottom:0; font-size:14px;}
+  .step-body code{color:var(--amber); background:rgba(255,180,84,0.08); padding:1px 6px; border-radius:3px;}
+
+  /* flow diagram */
+  .flow{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  }
+  .flow .node{
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    padding:10px 14px;
+    border-radius:6px;
+    font-size:13px;
+    color:var(--text);
+  }
+  .flow .arrow{color:var(--green); font-size:18px;}
+
+  .alert-term{
+    border:1px solid var(--amber);
+    background:rgba(255,180,84,0.06);
+    border-radius:6px;
+    padding:14px 16px;
+    font-size:13.5px;
+    color:#f0d9b0;
+  }
+  .alert-term b{color:var(--amber);}
+
+  footer{
+    padding:34px 0 60px;
+    color:var(--muted);
+    font-size:12.5px;
+    text-align:center;
+  }
+
+  [data-lang]{display:none;}
+  html[data-active="hi"] [data-lang="hi"]{display:block;}
+  html[data-active="en"] [data-lang="en"]{display:block;}
+  html[data-active="hi"] span[data-lang="hi"]{display:inline;}
+  html[data-active="en"] span[data-lang="en"]{display:inline;}
+
+  ::selection{background:var(--green-dim); color:#0d3d20;}
+
+  .badge-soft{
+    border:1px solid var(--green-dim);
+    color:var(--green);
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:3px;
+    font-weight:600;
+    letter-spacing:1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ======= HEADER ======= -->
+<div class="topbar">
+  <div class="container d-flex align-items-center justify-content-between py-3">
+    <div class="brand">~/laravel-mail-send<span class="cursor"></span></div>
+    <div class="d-flex gap-2 align-items-center">
+      <span class="path mb-0 d-none d-sm-inline" style="letter-spacing:1px;">भाषा / lang:</span>
+      <div class="btn-group" role="group" aria-label="language switch">
+        <button class="lang-toggle" id="langHi" type="button">हिंदी</button>
+        <button class="lang-toggle" id="langEn" type="button">English</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= HERO ======= -->
+<section class="pt-5 pb-4" style="border-bottom:1px dashed var(--border);">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="path"><span class="green">$</span> whoami</div>
+        <h1 style="font-size:2.3rem; font-weight:800; color:var(--text); line-height:1.25;">
+          <span data-lang="hi">Laravel में SMTP से Mail Send करना</span>
+          <span data-lang="en">Sending SMTP Mail in Laravel</span>
+        </h1>
+        <p style="color:var(--muted); font-size:15px; margin-top:14px;" data-lang="hi">
+          Ek chota, reusable <code style="color:var(--amber)">MailService</code> class, Gmail App Password setup,
+          aur controller me use — sab step-by-step, terminal style me.
+        </p>
+        <p style="color:var(--muted); font-size:15px; margin-top:14px;" data-lang="en">
+          A small, reusable <code style="color:var(--amber)">MailService</code> class, Gmail App Password setup,
+          and how to use it in a controller — all step by step, terminal style.
+        </p>
+        <div class="d-flex gap-2 mt-4">
+          <span class="badge-soft">LARAVEL 11</span>
+          <span class="badge-soft">SMTP</span>
+          <span class="badge-soft">GMAIL</span>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="term">
+          <div class="term-bar">
+            <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+            <span class="term-title">bash — order-mail.sh</span>
+          </div>
+          <div class="term-body">
+            <pre id="typewriter"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= FLOW ======= -->
+<section>
+  <div class="container">
+    <div class="path"><span class="green">$</span> <span data-lang="hi">cat flow.txt</span><span data-lang="en">cat flow.txt</span></div>
+    <h2 class="sec-title" data-lang="hi">Mail kaise jaati hai — poora flow</h2>
+    <h2 class="sec-title" data-lang="en">How the mail actually gets sent</h2>
+    <div class="flow mb-3">
+      <div class="node">Controller</div><div class="arrow">→</div>
+      <div class="node">MailService::sendHtmlMail()</div><div class="arrow">→</div>
+      <div class="node">Laravel Mail Facade</div><div class="arrow">→</div>
+      <div class="node">.env SMTP config</div><div class="arrow">→</div>
+      <div class="node">smtp.gmail.com:587</div><div class="arrow">→</div>
+      <div class="node" style="border-color:var(--green-dim); color:var(--green);">User Inbox ✓</div>
+    </div>
+    <p style="color:var(--muted); max-width:760px;" data-lang="hi">
+      Jab tum <code style="color:var(--amber)">MailService::sendHtmlMail()</code> call karte ho, wo andar
+      Laravel ke <code style="color:var(--amber)">Mail::send()</code> ko call karta hai. Laravel tumhare
+      <code style="color:var(--amber)">.env</code> file se SMTP credentials uthata hai, Gmail ke server se
+      connect karta hai (TLS, port 587), aur email ko waha se deliver karwata hai. Agar mail fail ho jaye
+      to sirf error log hota hai — order cancel nahi hota.
+    </p>
+    <p style="color:var(--muted); max-width:760px;" data-lang="en">
+      When you call <code style="color:var(--amber)">MailService::sendHtmlMail()</code>, it internally calls
+      Laravel's <code style="color:var(--amber)">Mail::send()</code>. Laravel reads the SMTP credentials from
+      your <code style="color:var(--amber)">.env</code> file, connects to Gmail's server (TLS, port 587), and
+      hands the email off for delivery. If sending fails, it's just logged — the order itself is never rolled back.
+    </p>
+  </div>
+</section>
+
+<!-- ======= APP PASSWORD ======= -->
+<section>
+  <div class="container">
+    <div class="path"><span class="green">$</span> setup --gmail-app-password</div>
+    <h2 class="sec-title" data-lang="hi">Step 1 — Gmail App Password kaise banaye</h2>
+    <h2 class="sec-title" data-lang="en">Step 1 — How to create a Gmail App Password</h2>
+
+    <div class="alert-term mb-4" data-lang="hi">
+      <b>Note:</b> Gmail ka normal password <code>MAIL_PASSWORD</code> me kaam nahi karega. Google ko ek
+      alag 16-digit "App Password" chahiye — sirf tabhi milta hai jab 2-Step Verification ON ho.
+    </div>
+    <div class="alert-term mb-4" data-lang="en">
+      <b>Note:</b> Your normal Gmail password will not work in <code>MAIL_PASSWORD</code>. Google requires
+      a separate 16-digit "App Password" — which is only available once 2-Step Verification is turned on.
+    </div>
+
+    <div data-lang="hi">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h6>Google Account Security kholo</h6>
+          <p><a href="https://myaccount.google.com/security" target="_blank">myaccount.google.com/security</a> pe jao, apne us Gmail account se login karo jo tum <code>MAIL_USERNAME</code> me use karoge.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h6>2-Step Verification ON karo</h6>
+          <p>Agar already ON nahi hai, to "2-Step Verification" pe click karke apna phone number verify karo aur enable karo. App Password sirf isi ke baad dikhta hai.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h6>"App Passwords" search karo</h6>
+          <p>Search bar me "App Passwords" type karo, ya seedha <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a> pe jao.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h6>App ka naam do</h6>
+          <p>Koi bhi naam likh do jaise <code>Laravel App</code> ya <code>My Website</code>, aur "Create" dabao.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h6>16-digit password copy karo</h6>
+          <p>Google ek 16-character password dikhayega (jaise <code>abcd efgh ijkl mnop</code>). Ye password sirf ek baar dikhta hai — turant copy kar lo.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h6>.env me paste karo</h6>
+          <p>Spaces hata kar <code>MAIL_PASSWORD=</code> ke aage paste karo — niche example me dikhaya hai.</p>
+        </div>
+      </div>
+    </div>
+
+    <div data-lang="en">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h6>Open Google Account Security</h6>
+          <p>Go to <a href="https://myaccount.google.com/security" target="_blank">myaccount.google.com/security</a> and sign in with the same Gmail account you'll use as <code>MAIL_USERNAME</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h6>Turn on 2-Step Verification</h6>
+          <p>If it isn't already on, click "2-Step Verification", verify your phone number, and enable it. App Passwords only appear after this is on.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h6>Search "App Passwords"</h6>
+          <p>Type "App Passwords" in the search bar, or go directly to <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h6>Name the app</h6>
+          <p>Give it any label like <code>Laravel App</code> or <code>My Website</code>, then hit "Create".</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h6>Copy the 16-digit password</h6>
+          <p>Google shows a 16-character password (e.g. <code>abcd efgh ijkl mnop</code>). It's shown only once — copy it right away.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h6>Paste it into .env</h6>
+          <p>Remove the spaces and paste it after <code>MAIL_PASSWORD=</code> — shown in the example below.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= ENV CONFIG ======= -->
+<section>
+  <div class="container">
+    <div class="path"><span class="green">$</span> nano .env</div>
+    <h2 class="sec-title" data-lang="hi">Step 2 — .env me mail credentials daalo</h2>
+    <h2 class="sec-title" data-lang="en">Step 2 — Add mail credentials to .env</h2>
+    <p style="color:var(--muted); max-width:760px;" data-lang="hi">Apne project ki <code style="color:var(--amber)">.env</code> file me ye lines add karo (App Password wale spaces hata dena):</p>
+    <p style="color:var(--muted); max-width:760px;" data-lang="en">Add these lines to your project's <code style="color:var(--amber)">.env</code> file (remove the spaces from the App Password):</p>
+
+    <div class="codebox mt-3">
+      <div class="term-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="term-title">.env</span></div>
+      <button class="copy-btn" data-copy="env1">COPY</button>
+      <pre id="env1">MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=youremail@gmail.com
+MAIL_PASSWORD=abcdefghijklmnop
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="youremail@gmail.com"
+MAIL_FROM_NAME="Your Site Name"
+
+ADMIN_EMAIL=youremail@gmail.com</pre>
+    </div>
+
+    <div class="alert-term mt-3" data-lang="hi">
+      <b>.env change karne ke baad</b> config cache clear karna mat bhoolo: <code>php artisan config:clear</code>
+    </div>
+    <div class="alert-term mt-3" data-lang="en">
+      <b>After changing .env</b>, don't forget to clear the config cache: <code>php artisan config:clear</code>
+    </div>
+  </div>
+</section>
+
+<!-- ======= MAILSERVICE ======= -->
+<section>
+  <div class="container">
+    <div class="path"><span class="green">$</span> touch app/Services/MailService.php</div>
+    <h2 class="sec-title" data-lang="hi">Step 3 — MailService class (chota &amp; simple version)</h2>
+    <h2 class="sec-title" data-lang="en">Step 3 — The MailService class (short &amp; simple version)</h2>
+    <p style="color:var(--muted); max-width:760px;" data-lang="hi">
+      Ye ek reusable helper hai — jahan bhi HTML mail bhejni ho, bas isko call karo. Tumhare original function
+      jaisa hi hai, bas thoda chota kar diya samajhne ke liye.
+    </p>
+    <p style="color:var(--muted); max-width:760px;" data-lang="en">
+      This is a reusable helper — wherever you need to send an HTML mail, just call it. Same as your original
+      function, just trimmed down so it's easier to read.
+    </p>
+
+    <div class="codebox mt-3">
+      <div class="term-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="term-title">app/Services/MailService.php</span></div>
+      <button class="copy-btn" data-copy="svc1">COPY</button>
+      <pre id="svc1">&lt;?php
+
+namespace App\Services;
+
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+
+class MailService
+{
+    public static function sendHtmlMail($to, $subject, $html, $attachments = null)
+    {
+        if (empty($to)) {
+            Log::error('MailService: recipient is empty', ['subject' => $subject]);
+            return false;
+        }
+
+        try {
+            Mail::send([], [], function ($message) use ($to, $subject, $html, $attachments) {
+                $message->to($to)->subject($subject)->html($html);
+
+                foreach ((array) $attachments as $file) {
+                    if ($file && file_exists($file)) {
+                        $message->attach($file);
+                    }
+                }
+            });
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Mail send failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ======= CONTROLLER USAGE ======= -->
+<section>
+  <div class="container">
+    <div class="path"><span class="green">$</span> php artisan tinker --controller</div>
+    <h2 class="sec-title" data-lang="hi">Step 4 — Controller me template kaha lagana aur use kaise karna</h2>
+    <h2 class="sec-title" data-lang="en">Step 4 — Where the template goes and how to use it in a controller</h2>
+
+    <p style="color:var(--muted); max-width:760px;" data-lang="hi">
+      Sabse pehle top pe class import karo, phir jaha order create hota hai wahi ek chota HTML string banao
+      aur <code style="color:var(--amber)">MailService::sendHtmlMail()</code> ko call kar do. Email fail ho
+      to <code style="color:var(--amber)">try/catch</code> me pakdo taaki order cancel na ho.
+    </p>
+    <p style="color:var(--muted); max-width:760px;" data-lang="en">
+      First import the class at the top, then right after the order is created build a small HTML string and
+      call <code style="color:var(--amber)">MailService::sendHtmlMail()</code>. Wrap it in a
+      <code style="color:var(--amber)">try/catch</code> so a mail failure never cancels the order.
+    </p>
+
+    <div class="codebox mt-3">
+      <div class="term-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="term-title">app/Http/Controllers/OrderController.php</span></div>
+      <button class="copy-btn" data-copy="ctrl1">COPY</button>
+      <pre id="ctrl1">&lt;?php
+// top of controller
+use App\Services\MailService;
+
+// ... inside your store() / place-order method,
+// AFTER $order has been saved successfully:
+
+try {
+    $emailHtml = '
+        &lt;h2&gt;Order Confirmation&lt;/h2&gt;
+        &lt;p&gt;Hello ' . e($order->o_name) . ',&lt;/p&gt;
+        &lt;p&gt;Order ID: ' . e($order->o_order_number) . '&lt;/p&gt;
+        &lt;p&gt;Total: ₹' . number_format($order->o_total_amount, 2) . '&lt;/p&gt;
+    ';
+
+    MailService::sendHtmlMail(
+        $order->o_email,
+        'Order Confirmation - ' . $order->o_order_number,
+        $emailHtml
+    );
+
+    $adminEmail = env('ADMIN_EMAIL');
+
+    if (!empty($adminEmail)) {
+        MailService::sendHtmlMail(
+            $adminEmail,
+            'New Order Received - ' . $order->o_order_number,
+            $emailHtml
+        );
+    }
+} catch (\Exception $mailException) {
+    // Order already saved — do NOT roll it back for an email issue
+    Log::error('Order email failed: ' . $mailException->getMessage());
+}</pre>
+    </div>
+
+    <div class="alert-term mt-3" data-lang="hi">
+      <b>Tip:</b> Bade HTML template (jaisa tumhara original design tha) ko alag <code>resources/views/emails/order.blade.php</code>
+      file me rakho aur <code>view('emails.order', ['order' => $order])->render()</code> se HTML nikalo — controller saaf rahega.
+    </div>
+    <div class="alert-term mt-3" data-lang="en">
+      <b>Tip:</b> Keep a bigger HTML template (like your original design) in a separate
+      <code>resources/views/emails/order.blade.php</code> file and pull the HTML with
+      <code>view('emails.order', ['order' => $order])->render()</code> — keeps the controller clean.
+    </div>
+  </div>
+</section>
+
+<!-- ======= FULL FUNCTION EXAMPLE ======= -->
+<section>
+  <div class="container">
+    <div class="path"><span class="green">$</span> cat OrderController.php</div>
+    <h2 class="sec-title" data-lang="hi">Bonus — pura chota controller function (copy-paste ready)</h2>
+    <h2 class="sec-title" data-lang="en">Bonus — a full, small controller function (copy-paste ready)</h2>
+    <p style="color:var(--muted); max-width:760px;" data-lang="hi">
+      Ye ek complete <code style="color:var(--amber)">placeOrder()</code> function hai — order save karta hai,
+      customer aur admin dono ko mail bhejta hai, aur agar mail fail ho jaye to bhi order safe rehta hai.
+    </p>
+    <p style="color:var(--muted); max-width:760px;" data-lang="en">
+      This is a complete <code style="color:var(--amber)">placeOrder()</code> function — it saves the order,
+      emails both the customer and the admin, and keeps the order safe even if the email fails.
+    </p>
+
+    <div class="codebox mt-3">
+      <div class="term-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="term-title">app/Http/Controllers/OrderController.php</span></div>
+      <button class="copy-btn" data-copy="full1">COPY</button>
+      <pre id="full1">&lt;?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Order;
+use App\Services\MailService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class OrderController extends Controller
+{
+    public function placeOrder(Request $request)
+    {
+        $validated = $request->validate([
+            'o_name'  => 'required|string',
+            'o_email' => 'required|email',
+            'o_phone' => 'required|string',
+        ]);
+
+        // 1. Save the order first — this must always succeed
+        $order = Order::create([
+            'o_name'          => $validated['o_name'],
+            'o_email'         => $validated['o_email'],
+            'o_phone'         => $validated['o_phone'],
+            'o_order_number'  => 'ORD-' . strtoupper(uniqid()),
+            'o_total_amount'  => $request->input('total', 0),
+        ]);
+
+        // 2. Try to send emails — failure here should NOT cancel the order
+        try {
+            $emailHtml = '
+                &lt;h2&gt;Order Confirmation&lt;/h2&gt;
+                &lt;p&gt;Hello ' . e($order->o_name) . ',&lt;/p&gt;
+                &lt;p&gt;Order ID: ' . e($order->o_order_number) . '&lt;/p&gt;
+                &lt;p&gt;Total: ₹' . number_format($order->o_total_amount, 2) . '&lt;/p&gt;
+            ';
+
+            MailService::sendHtmlMail(
+                $order->o_email,
+                'Order Confirmation - ' . $order->o_order_number,
+                $emailHtml
+            );
+
+            $adminEmail = env('ADMIN_EMAIL');
+
+            if (!empty($adminEmail)) {
+                MailService::sendHtmlMail(
+                    $adminEmail,
+                    'New Order Received - ' . $order->o_order_number,
+                    $emailHtml
+                );
+            }
+        } catch (\Exception $mailException) {
+            Log::error('Order email failed: ' . $mailException->getMessage());
+        }
+
+        // 3. Respond — order is already safely created
+        return response()->json([
+            'success'  => true,
+            'order_id' => $order->o_order_number,
+        ]);
+    }
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ======= TEST ======= -->
+<section style="border-bottom:none;">
+  <div class="container">
+    <div class="path"><span class="green">$</span> php artisan serve</div>
+    <h2 class="sec-title" data-lang="hi">Step 5 — Test kaise karo</h2>
+    <h2 class="sec-title" data-lang="en">Step 5 — How to test it</h2>
+    <div class="codebox mt-3">
+      <div class="term-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="term-title">tinker</span></div>
+      <button class="copy-btn" data-copy="test1">COPY</button>
+      <pre id="test1">php artisan config:clear
+php artisan tinker
+
+>>> App\Services\MailService::sendHtmlMail(
+...     'yourtestmail@gmail.com',
+...     'Test Mail',
+...     '&lt;h3&gt;Hello, this is a test.&lt;/h3&gt;'
+... );</pre>
+    </div>
+    <p style="color:var(--muted); margin-top:14px;" data-lang="hi">
+      Agar <code style="color:var(--amber)">true</code> return ho aur inbox me mail aa jaye — setup ho gaya.
+      Agar error aaye, sabse pehle <code style="color:var(--amber)">storage/logs/laravel.log</code> check karo.
+    </p>
+    <p style="color:var(--muted); margin-top:14px;" data-lang="en">
+      If it returns <code style="color:var(--amber)">true</code> and the mail lands in the inbox — you're
+      set. If it errors out, check <code style="color:var(--amber)">storage/logs/laravel.log</code> first.
+    </p>
+  </div>
+</section>
+
+<!-- ======= EMAIL TEMPLATE ======= -->
+<section>
+  <div class="container">
+
+    <div class="path">
+      <span class="green">$</span> echo $emailHtml
+    </div>
+
+    <h2 class="sec-title" data-lang="hi">
+      Step 6 — Simple &amp; Beautiful Email Template
+    </h2>
+
+    <h2 class="sec-title" data-lang="en">
+      Step 6 — Simple &amp; Beautiful Email Template
+    </h2>
+
+    <p style="color:var(--muted); max-width:760px;" data-lang="hi">
+      Agar aap alag Blade file nahi banana chahte, to poora email template
+      <code style="color:var(--amber)">$emailHtml</code> variable ke andar hi rakh sakte ho.
+    </p>
+
+    <p style="color:var(--muted); max-width:760px;" data-lang="en">
+      If you don't want to create a separate Blade file, you can keep the
+      complete email template directly inside the
+      <code style="color:var(--amber)">$emailHtml</code> variable.
+    </p>
+
+
+    <!-- ===== EMAIL PREVIEW ===== -->
+    <div style="
+      margin-top:25px;
+      background:#e9eef2;
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:25px 15px;
+    ">
+
+      <div style="
+        max-width:540px;
+        margin:auto;
+        background:#fff;
+        border-radius:10px;
+        overflow:hidden;
+        box-shadow:0 8px 25px rgba(0,0,0,.08);
+        font-family:Arial,Helvetica,sans-serif;
+      ">
+
+        <!-- Header -->
+        <div style="
+          background:#1c9a53;
+          padding:24px 20px;
+          text-align:center;
+          color:#fff;
+        ">
+
+          <div style="
+            width:42px;
+            height:42px;
+            line-height:42px;
+            margin:0 auto 9px;
+            background:#fff;
+            color:#1c9a53;
+            border-radius:50%;
+            font-size:22px;
+            font-weight:bold;
+          ">✓</div>
+
+          <h2 style="margin:0;font-size:21px;">
+            Order Confirmed
+          </h2>
+
+          <p style="
+            margin:6px 0 0;
+            font-size:12px;
+            opacity:.9;
+          ">
+            Thank you for your order!
+          </p>
+
+        </div>
+
+
+        <!-- Body -->
+        <div style="padding:24px;">
+
+          <p style="
+            margin:0 0 8px;
+            color:#1e2b23;
+            font-size:16px;
+          ">
+            Hello <strong>John</strong>,
+          </p>
+
+          <p style="
+            margin:0 0 20px;
+            color:#68756d;
+            font-size:13px;
+            line-height:1.6;
+          ">
+            Your order has been successfully placed.
+            Here are your order details:
+          </p>
+
+
+          <!-- Details -->
+          <div style="
+            border:1px solid #e1e8e3;
+            border-radius:7px;
+            overflow:hidden;
+          ">
+
+            <div style="
+              background:#f5f8f6;
+              padding:11px 14px;
+              border-bottom:1px solid #e1e8e3;
+              font-size:13px;
+              font-weight:bold;
+              color:#1e2b23;
+            ">
+              Order Details
+            </div>
+
+            <div style="padding:14px;">
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+
+                <tr>
+                  <td style="
+                    padding:6px 0;
+                    color:#7a857e;
+                    font-size:12px;
+                  ">
+                    Order ID
+                  </td>
+
+                  <td align="right" style="
+                    padding:6px 0;
+                    color:#1e2b23;
+                    font-size:12px;
+                    font-weight:bold;
+                  ">
+                    #ORD-4821
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="
+                    padding:6px 0;
+                    color:#7a857e;
+                    font-size:12px;
+                  ">
+                    Status
+                  </td>
+
+                  <td align="right" style="padding:6px 0;">
+                    <span style="
+                      background:#e7f7ed;
+                      color:#18834a;
+                      padding:4px 9px;
+                      border-radius:20px;
+                      font-size:11px;
+                      font-weight:bold;
+                    ">
+                      Confirmed
+                    </span>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="
+                    border-top:1px solid #edf1ee;
+                    padding:12px 0 4px;
+                    color:#1e2b23;
+                    font-size:13px;
+                    font-weight:bold;
+                  ">
+                    Total Amount
+                  </td>
+
+                  <td align="right" style="
+                    border-top:1px solid #edf1ee;
+                    padding:12px 0 4px;
+                    color:#1c9a53;
+                    font-size:17px;
+                    font-weight:bold;
+                  ">
+                    ₹1,499.00
+                  </td>
+                </tr>
+
+              </table>
+
+            </div>
+          </div>
+
+
+          <!-- Info -->
+          <div style="
+            margin-top:17px;
+            padding:10px 12px;
+            background:#f5f8f6;
+            border-left:3px solid #1c9a53;
+            color:#68756d;
+            font-size:12px;
+            line-height:1.6;
+          ">
+            We will notify you when your order is shipped.
+          </div>
+
+
+          <p style="
+            margin:19px 0 0;
+            color:#68756d;
+            font-size:13px;
+          ">
+            Thank you for choosing us.
+          </p>
+
+          <p style="
+            margin:13px 0 0;
+            color:#1e2b23;
+            font-size:13px;
+          ">
+            Regards,<br>
+            <strong>Your Company Team</strong>
+          </p>
+
+        </div>
+
+
+        <!-- Footer -->
+        <div style="
+          background:#f7f9f8;
+          border-top:1px solid #e5ebe7;
+          padding:14px;
+          text-align:center;
+        ">
+
+          <p style="
+            margin:0;
+            color:#8a958e;
+            font-size:10px;
+          ">
+            This is an automated email. Please do not reply.
+          </p>
+
+          <p style="
+            margin:5px 0 0;
+            color:#a0aaa4;
+            font-size:10px;
+          ">
+            © 2026 Your Company
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ===== EMAIL HTML CODE ===== -->
+    <div class="codebox mt-4">
+
+      <div class="term-bar">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+        <span class="term-title">
+          $emailHtml
+        </span>
+      </div>
+
+      <button class="copy-btn" data-copy="emailHtmlCode">
+        COPY
+      </button>
+
+      <pre id="emailHtmlCode">&lt;?php
+
+$emailHtml = '
+&lt;div style="background:#f3f5f4;padding:30px 15px;font-family:Arial,Helvetica,sans-serif;"&gt;
+
+    &lt;div style="max-width:540px;margin:auto;background:#fff;border-radius:10px;overflow:hidden;"&gt;
+
+        &lt;div style="background:#1c9a53;padding:24px;text-align:center;color:#fff;"&gt;
+
+            &lt;div style="
+                width:42px;
+                height:42px;
+                line-height:42px;
+                margin:auto;
+                background:#fff;
+                color:#1c9a53;
+                border-radius:50%;
+                font-size:22px;
+                font-weight:bold;
+            "&gt;
+                ✓
+            &lt;/div&gt;
+
+            &lt;h2 style="margin:8px 0 0;"&gt;
+                Order Confirmed
+            &lt;/h2&gt;
+
+            &lt;p style="margin:6px 0 0;font-size:12px;"&gt;
+                Thank you for your order!
+            &lt;/p&gt;
+
+        &lt;/div&gt;
+
+
+        &lt;div style="padding:24px;"&gt;
+
+            &lt;p style="font-size:16px;color:#1e2b23;"&gt;
+                Hello &lt;strong&gt;' . e($order-&gt;o_name) . '&lt;/strong&gt;,
+            &lt;/p&gt;
+
+            &lt;p style="font-size:13px;color:#68756d;line-height:1.6;"&gt;
+                Your order has been successfully placed.
+            &lt;/p&gt;
+
+
+            &lt;div style="
+                border:1px solid #e1e8e3;
+                border-radius:7px;
+                overflow:hidden;
+            "&gt;
+
+                &lt;div style="
+                    background:#f5f8f6;
+                    padding:11px 14px;
+                    font-weight:bold;
+                "&gt;
+                    Order Details
+                &lt;/div&gt;
+
+                &lt;div style="padding:14px;"&gt;
+
+                    &lt;p style="font-size:12px;"&gt;
+                        Order ID:
+                        &lt;strong&gt;' . e($order-&gt;o_order_number) . '&lt;/strong&gt;
+                    &lt;/p&gt;
+
+                    &lt;p style="font-size:12px;"&gt;
+                        Status:
+                        &lt;strong style="color:#18834a;"&gt;
+                            Confirmed
+                        &lt;/strong&gt;
+                    &lt;/p&gt;
+
+                    &lt;p style="
+                        border-top:1px solid #edf1ee;
+                        padding-top:12px;
+                    "&gt;
+                        Total:
+                        &lt;strong style="color:#1c9a53;font-size:17px;"&gt;
+                            ₹' . number_format($order-&gt;o_total_amount, 2) . '
+                        &lt;/strong&gt;
+                    &lt;/p&gt;
+
+                &lt;/div&gt;
+
+            &lt;/div&gt;
+
+
+            &lt;p style="
+                margin-top:17px;
+                padding:10px;
+                background:#f5f8f6;
+                border-left:3px solid #1c9a53;
+                color:#68756d;
+                font-size:12px;
+            "&gt;
+                We will notify you when your order is shipped.
+            &lt;/p&gt;
+
+
+            &lt;p style="font-size:13px;color:#68756d;"&gt;
+                Thank you for choosing us.
+            &lt;/p&gt;
+
+            &lt;p style="font-size:13px;"&gt;
+                Regards,&lt;br&gt;
+                &lt;strong&gt;Your Company Team&lt;/strong&gt;
+            &lt;/p&gt;
+
+        &lt;/div&gt;
+
+
+        &lt;div style="
+            background:#f7f9f8;
+            padding:14px;
+            text-align:center;
+        "&gt;
+
+            &lt;small style="color:#8a958e;"&gt;
+                This is an automated email. Please do not reply.
+            &lt;/small&gt;
+
+        &lt;/div&gt;
+
+    &lt;/div&gt;
+
+&lt;/div&gt;
+';
+?&gt;</pre>
+
+    </div>
+
+
+    <div class="alert-term mt-3" data-lang="hi">
+      <b>Use:</b>
+      Is poore HTML ko directly
+      <code>$emailHtml</code>
+      variable mein rakho aur
+      <code>MailService::sendHtmlMail()</code>
+      ko pass kar do.
+    </div>
+
+    <div class="alert-term mt-3" data-lang="en">
+      <b>Use:</b>
+      Keep this complete HTML directly inside the
+      <code>$emailHtml</code>
+      variable and pass it to
+      <code>MailService::sendHtmlMail()</code>.
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <span data-lang="hi">$ echo "Built for Laravel developers by Aman Kumar "</span>
+  <span data-lang="en">$ echo "Built for Laravel developers by Aman Kumar "</span>
+</footer>
+
+<script>
+  // language toggle
+  const html = document.documentElement;
+  const langHi = document.getElementById('langHi');
+  const langEn = document.getElementById('langEn');
+  function setLang(lang){
+    html.setAttribute('data-active', lang);
+    langHi.classList.toggle('active', lang === 'hi');
+    langEn.classList.toggle('active', lang === 'en');
+  }
+  setLang('hi');
+  langHi.addEventListener('click', () => setLang('hi'));
+  langEn.addEventListener('click', () => setLang('en'));
+
+  // copy buttons
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-copy');
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'COPIED ✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1500);
+      });
+    });
+  });
+
+  // hero typewriter
+  const lines = [
+    "$ php artisan queue:work",
+    "",
+    "[order#4821] preparing confirmation email...",
+    "MailService::sendHtmlMail(",
+    "  to: 'customer@gmail.com',",
+    "  subject: 'Order Confirmation - #4821'",
+    ")",
+    "",
+    "Connecting smtp.gmail.com:587 [TLS]... ok",
+    "250 2.0.0 OK  Message accepted",
+    "",
+    "✓ mail sent in 412ms"
+  ];
+  const el = document.getElementById('typewriter');
+  let li = 0, ci = 0, buf = "";
+  function type(){
+    if (li >= lines.length){
+      el.innerHTML = buf + '<span class="hero-cursor"></span>';
+      return;
+    }
+    const line = lines[li];
+    if (ci <= line.length){
+      el.innerHTML = buf + line.slice(0, ci) + '<span class="hero-cursor"></span>';
+      ci++;
+      setTimeout(type, 18 + Math.random()*22);
+    } else {
+      buf += line + "\n";
+      li++; ci = 0;
+      setTimeout(type, 120);
+    }
+  }
+  type();
+</script>
+</body>
+</html>
